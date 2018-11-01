@@ -3,107 +3,239 @@
 #include<array>
 #include<algorithm>
 using namespace std;
-vector<int> game[4];
-float ranks[4];
-float Prevranks[4];
-int outdegree[4]={0};
-bool adj[4][4]={false};
+
+vector<double> ranks;
+vector<double> Prevranks;
+vector<int> outdegree;
+vector<vector<bool>> adj;
+
+vector<vector<double>>powerMatrix;
+vector<vector<double>> initialMatrix;
+vector<double>rankinit;
 
 bool checksame()
 {
 int j,count=0;
 	
-		for(j=0;j<4;j++)
+		for(j=0;j<ranks.size();j++)
 		{
 
-			if(abs(Prevranks[j]-ranks[j])<0000.1)
+			if(abs(Prevranks[j]-ranks[j])<0.0001)
 				count++;
 		}
 	
-	if(count==4)
+	if(count==ranks.size())
 		return true;
 	else
 		return false;
 }
 
+
 void calculateRank()
 {
+	int count=1;
 	while(1)
 	{
+count++;
 
-
-for(int i=0;i<4;i++)
-{ int t=0;
-	for(int j=0;j<4;j++)
+for(int i=0;i<ranks.size();i++)
+{ 
+	for(int j=0;j<ranks.size();j++)
 	{
 		if(adj[i][j])
 		{
-            t=1;
+           
 			ranks[i]+=0.85*ranks[j]/outdegree[j];
 		}
 		
      }
-     if(t)
-     ranks[i]=+0.15*ranks[i]/4;
+    
+     ranks[i]+=0.15/ranks.size();
+
 }
-if(checksame())
+if(checksame()||count==15)
 	break;
 else
-	copy(begin(ranks), end(ranks), begin(Prevranks));
-for(int i=0;i<4;i++)
+	copy(ranks.begin(), ranks.end(), Prevranks.begin());
+        
+for(int i=0;i<ranks.size();i++)
 {
-cout<<ranks[i];
+cout<<"  "<<ranks[i];
+
 }
 cout<<"\n";
 }
 
+}
+void mul(vector<vector<double>> a,vector<vector<double>> b)
+{
+
+ vector<vector<double>> mul(ranks.size(),vector<double>(ranks.size(),0)); 
+    for (int i = 0; i < ranks.size(); i++) 
+    { 
+        for (int j = 0; j < ranks.size(); j++) 
+        { 
+            mul[i][j] = 0; 
+            for (int k = 0; k < ranks.size(); k++) 
+                mul[i][j] += a[i][k]*b[k][j]; 
+        } 
+    } 
+  
+   
+    for (int i=0; i<ranks.size(); i++) 
+        for (int j=0; j<ranks.size(); j++) 
+            powerMatrix[i][j] = mul[i][j];
+
+}
+void power(vector<vector<double>> &p,int n)
+{
+if(n==1)
+	return;
+else
+{
+	power(p,n/2);
+	mul(p,p);
+	if(n%2)
+		mul(p,initialMatrix);
+}
+
+}
+void mulwithrank(vector<vector<double>> adj,vector<double> v)
+{
+vector<double>mul(ranks.size(),0); 
+    for (int i = 0; i< ranks.size(); i++) 
+    { 
+        for (int j = 0; j < 1; j++) 
+        { 
+            mul[i]= 0; 
+            for (int k = 0; k < ranks.size(); k++) 
+                mul[i] += adj[i][k]*v[k]; 
+        } 
+    } 
+  
+   for(int i=0;i<ranks.size();i++)
+   	ranks[i]=mul[i];
+
+
+}
+void calculateRankPower()
+{
+	rankinit.assign(ranks.begin(),ranks.end());
+	
+	for(int i=1;i<100;i++)
+        {
+        	
+        	power(powerMatrix,i);
+        	
+		mulwithrank(powerMatrix,rankinit);
+		if(checksame())
+			break;
+		else
+			copy(ranks.begin(), ranks.end(), Prevranks.begin());
+		cout<<endl;
+
+		for(int j=0;j<ranks.size();j++)
+                 {
+                         cout<<" power "<<ranks[j];
+
+			}
+		cout<<"\n";
+			}
+	
 }
 int main()
 {
-  
-game[1].push_back(0);
-outdegree[1]++;
-adj[0][1]=true;
-game[2].push_back(0);
-outdegree[2]++;
-adj[0][2]=true;
-game[2].push_back(1);
-outdegree[2]++;
-adj[1][2]=true;
-game[3].push_back(0);
-outdegree[3]++;
-adj[0][3]=true;
-game[3].push_back(1);
-outdegree[3]++;
-adj[1][3]=true;
-game[3].push_back(2);
-outdegree[3]++;
-adj[2][3]=true;
-for(int i=0;i<4;i++)
+  cout.precision(5);
+  int count=0;
+  int nplayers;
+  cout<<"Enter Number of players";
+  cin>>nplayers;
+  for(int i=0;i<nplayers;i++)
 {
 
 
-	ranks[i]=0.25;
+	ranks.push_back(1.0/nplayers);
 }
-for(int i=0;i<4;i++)
+Prevranks.resize(nplayers);
+copy(ranks.begin(), ranks.end(), Prevranks.begin());
+for(int i=0;i<nplayers;i++)
 {
-if(game[i].size()==3)
-	ranks[i]=0.0;
+cout<<" "<<ranks[i]<<"\n";
 }
-for(int i=0;i<4;i++)
-{
-cout<<ranks[i]<<"\n";
+int m,n,matches;
+outdegree.resize(nplayers);
+adj.resize(nplayers);
+for (int i = 0; i < nplayers; ++i)
+    adj[i].resize(nplayers);
+powerMatrix.resize(nplayers);
+for (int i = 0; i < nplayers; ++i)
+    powerMatrix[i].resize(nplayers);
+initialMatrix.resize(nplayers);
+for (int i = 0; i < nplayers; ++i)
+    initialMatrix[i].resize(nplayers);
+
+  while(count++ <1)
+  {
+  	cout<<"enter matches";
+  	cin>>matches;
+  	while(matches-- >0)
+  	{
+                cout<<"Enter winner and loser";
+  		cin>>m>>n;
+  		
+outdegree[n]++;
+adj[m][n]=true;
 }
 
-copy(begin(ranks), end(ranks), begin(Prevranks));
+for(int i=0;i<nplayers;i++)
+{
+	for(int j=0;j<nplayers;j++)
+	{
+		if(adj[i][j])
+		{
+			//double x=(1.0/outdegree[j]);
+			powerMatrix[i][j]=0.85*(1.0/outdegree[j])+0.15/nplayers;
+		}
+		if(outdegree[j]==0)
+		{
+			powerMatrix[i][j]=1.0/nplayers;
+		}
+	}
+}
+initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
+
+
+for(int i=0;i<nplayers;i++)
+{
+	for(int j=0;j<nplayers;j++)
+	{
+		cout<<fixed<<powerMatrix[i][j];
+	}
+	cout<<"\n";
+}
+
+
 calculateRank();
-for(int i=0;i<4;i++)
+for(int i=0;i<nplayers;i++)
 {
-cout<<ranks[i];
+cout<<"  "<<ranks[i];
 }
+
 cout<<"\n";
-cout<<*max_element(ranks,ranks+4);
+cout<<*max_element(ranks.begin(),ranks.end());
+cout.precision(30);
+for(int i=0;i<nplayers;i++)
+{
+ranks[i]=1.0/nplayers;
+}
 
 
+copy(ranks.begin(), ranks.end(), Prevranks.begin());
+
+calculateRankPower();
+cout<<endl;
+cout<<"max rank"<<*max_element(Prevranks.begin(),Prevranks.end());
+
+}
 	return 0;
 }
