@@ -165,7 +165,7 @@ cout<<"\n";*/
 int main()
 {
 	int game;
-	cout<<"Press 1 for Tournament, 2 for Race ";
+	cout<<"Press 1 for Team Sport, 2 for Individual sport  ";
     cin>>game;
   cout.precision(5);
   int count=0,temp;
@@ -207,7 +207,7 @@ cin>>temp;
   {     
   	if(game==1)
   	{
-  	cout<<"Enter Number of matches for Tournament "+to_string(count)<<endl;
+  	cout<<"Enter Number of matches for Game "+to_string(count)<<endl;
   	cin>>matches;
   	while(matches-- >0)
   	{
