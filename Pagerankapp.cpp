@@ -207,12 +207,19 @@ cin>>temp;
   {     
   	if(game==1)
   	{
-  	cout<<"Enter Number of matches for Game "+to_string(count)<<endl;
+  	cout<<"Enter Number of matches for Tournament "+to_string(count)<<endl;
   	cin>>matches;
   	while(matches-- >0)
   	{
                 cout<<"Enter winner and loser ";
   		cin>>m>>n;
+  		if(m>nplayers-1||n>nplayers-1)
+  		{
+  			cout<<"Enter valid Team Id"<<endl;
+  			matches++;
+  			continue;
+  			
+  		}
   		
 outdegree[n]++;
 adj[m][n]=true;
@@ -228,7 +235,14 @@ int x;
 
 while( cin>>x )
 {
-	r.push_back(x);
+	int f=0;
+	if(x>nplayers-1)
+	{
+		cout<<"Enter valid player Id"<<endl;
+		f=1;
+	}
+	if(f==0)
+	    r.push_back(x);
 	if(cin.get()=='\n')
 		break;
 }
