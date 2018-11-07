@@ -8,12 +8,12 @@
 #include <chrono> 
 #include <iostream>
 #include <fstream>
-#include <boost/iostreams/tee.hpp>
-#include <boost/iostreams/stream.hpp>
+
+#include <stdlib.h> 
+
 using namespace std::chrono; 
 using namespace std;
-typedef boost::iostreams::tee_device<std::ostream, std::ostream> teedev;
-typedef boost::iostreams::stream<teedev, std::char_traits<typename std::ostream::char_type>, std::allocator< typename std::ostream::char_type > > tee_stream;
+
 vector<double> powerranks;
 vector<double> powerPrevranks;
 vector<int> outdegree;
@@ -21,6 +21,7 @@ vector<vector<bool>> adj;
 vector<vector<double>>powerMatrix;
 vector<vector<double>> initialMatrix;
 vector<double>rankinit;
+vector<vector<int>> edge;
 
 bool checksamepower()
 {
@@ -121,26 +122,42 @@ int main()
 
 {
 	int nodes;
-	std::ofstream of;
+	
+
+	 //srand(time(0)); 
+  
+	//std::ofstream of;
     //of.open( "test.txt" );
      freopen("test.txt","w",stdout);
-    teedev td( of, std::cout );
-    tee_stream ts(td);
-	cout<<200<<endl;
-	cout<<4000<<endl;
-	int e=4000,k=0;
-	int edge[e][2];
+    //teedev td( of, std::cout );
+    //tee_stream ts(td);
+	cout<<1000<<endl;
+	cout<<40000<<endl;
+	long e=40000,k=0;
+	
+	//vector<vector<int>> edge;
+	//long edge[e][2];
+         edge.clear();
+	auto start = high_resolution_clock::now();
+	edge.resize(40000);
 	while(k < e)
 	{
-		edge[k][0] = rand()%200;
-		edge[k][1] = rand()%200;
+		  
+		edge[k].push_back(rand()%1000);
+		edge[k].push_back(rand()%1000);
+		
 		k++;
 	}
+	
 	for(int i=0;i<e;i++)
 	{
 		cout<<edge[i][0]<<" "<<edge[i][1];
+		//c++;
 		cout<<endl;
 	}
+	
+	//of.close();
+	edge.clear();
 	freopen("test.txt","r",stdin);
 	freopen("output.txt","w",stdout);
 cout<<"Enter Nodes: "<<endl;
@@ -203,7 +220,7 @@ for(int i=0;i<nodes;i++)
 
 initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
 cout.precision(30);
-auto start = high_resolution_clock::now();
+
 calculateRankPower();
 cout<<"Power matrix Page Ranks  "<<endl;
 for(int j=0;j<powerranks.size();j++)
