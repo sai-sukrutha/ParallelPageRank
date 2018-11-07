@@ -6,6 +6,7 @@
 #include <string>
 #include <stdio.h>
 #include <chrono> 
+#include <omp.h>
 #include <iostream>
 #include <fstream>
 #include <boost/iostreams/tee.hpp>
@@ -25,41 +26,68 @@ vector<double>rankinit;
 bool checksamepower()
 {
 int j,count=0;
-int size=powerranks.size();
 	
-		for(j=0;j<size;j++)
+		for(j=0;j<powerranks.size();j++)
 		{
 
 			if(abs(powerPrevranks[j]-powerranks[j])<0.0001)
 				count++;
 		}
 	
-	if(count==size)
+	if(count==powerranks.size())
 		return true;
 	else
 		return false;
 }
+vector<double> unidimensionalA;
+vector<double> unidimensionalB;
 
+void convert(vector<vector<double>> a,vector<vector<double>> b,int size)
+{
+	unidimensionalA.clear();
+	unidimensionalB.clear();
+	#pragma omp parallel for
+for(int i=0;i<size;i++)
+{
+	for(int j=0;j<size;j++)
+	{
+		unidimensionalA.push_back(a[i][j]);
+		unidimensionalB.push_back(b[j][i]);
+	}
+}
+
+}
 void mul(vector<vector<double>> a,vector<vector<double>> b)
 {
-int size=powerranks.size();
- vector<vector<double>> mul(size,vector<double>(size,0)); 
-    for (int i = 0; i < size; i++) 
+
+ vector<vector<double>> mul(powerranks.size(),vector<double>(powerranks.size(),0)); 
+int i,j,k,iOff, jOff;
+	double tot;
+	long size=powerranks.size();
+	convert(a,b,size);
+	#pragma omp parallel shared(mul) private(i, j, k, iOff, jOff, tot) num_threads(40)
+	{
+
+ #pragma omp for schedule(static)
+    for ( i = 0; i < size; i++) 
     { 
-        for (int j = 0; j < size; j++) 
+    	iOff = i * size;
+        for ( j = 0; j < size; j++) 
         { 
-            mul[i][j] = 0; 
-            for (int k = 0; k < size; k++) 
-                mul[i][j] += a[i][k]*b[k][j]; 
+        	jOff = j * size;
+            tot = 0; 
+            for ( k = 0; k < size; k++) 
+            	tot += unidimensionalA[iOff + k] * unidimensionalB[jOff + k];
+
+                mul[i][j] =tot;
         } 
     } 
   
    
-    for (int i=0; i<size; i++) 
-        for (int j=0; j<size; j++) 
+    for ( i=0; i<size; i++) 
+        for ( j=0; j<size; j++) 
             powerMatrix[i][j] = mul[i][j];
-
-
+}
 }
 
 void power(vector<vector<double>> &p,int n)
@@ -78,21 +106,21 @@ else
 
 void mulwithrank(vector<vector<double>> adj,vector<double> v)
 {
-	int size=powerranks.size();
-vector<double>mul(size,0); 
-    for (int i = 0; i< size; i++) 
+vector<double>mul(powerranks.size(),0); 
+#pragma omp parallel for
+    for (int i = 0; i< powerranks.size(); i++) 
     { 
         for (int j = 0; j < 1; j++) 
         { 
             mul[i]= 0; 
-            for (int k = 0; k < size; k++) 
+            for (int k = 0; k < powerranks.size(); k++) 
                 mul[i] += adj[i][k]*v[k]; 
         } 
     } 
   
-   for(int i=0;i<size;i++)
+   for(int i=0;i<powerranks.size();i++)
    	powerranks[i]=mul[i];
-  
+ 
 
 
 }
@@ -122,15 +150,17 @@ int main()
 {
 	int nodes;
 	std::ofstream of;
-    //of.open( "test.txt" );
-     freopen("test.txt","w",stdout);
+    //of.open( "testp.txt" );
+
     teedev td( of, std::cout );
     tee_stream ts(td);
+
+	freopen("testp.txt","w",stdout);
 	cout<<200<<endl;
 	cout<<4000<<endl;
 	int e=4000,k=0;
 	int edge[e][2];
-	while(k < e)
+	while(k< e)
 	{
 		edge[k][0] = rand()%200;
 		edge[k][1] = rand()%200;
@@ -141,8 +171,9 @@ int main()
 		cout<<edge[i][0]<<" "<<edge[i][1];
 		cout<<endl;
 	}
-	freopen("test.txt","r",stdin);
-	freopen("output.txt","w",stdout);
+	//of.close();
+	freopen("testp.txt","r",stdin);
+	freopen("outputp.txt","w",stdout);
 cout<<"Enter Nodes: "<<endl;
  cin>>nodes;
   for(int i=0;i<nodes;i++)
@@ -151,23 +182,14 @@ cout<<"Enter Nodes: "<<endl;
 
 	
 	powerranks.push_back(1.0/nodes);
-
 }
+
 powerPrevranks.resize(nodes);
 copy(powerranks.begin(), powerranks.end(), powerPrevranks.begin());
-
 outdegree.resize(nodes);
 adj.resize(nodes);
 for (int i = 0; i < nodes; ++i)
     adj[i].resize(nodes);
-
-for(int i=0;i<nodes;i++)
-{
-	for(int j=0;j<nodes;j++)
-	{
-adj[i][j]=false;
-	}
-	}
 powerMatrix.resize(nodes);
 for (int i = 0; i < nodes; ++i)
     powerMatrix[i].resize(nodes);
@@ -184,7 +206,7 @@ while(edges--)
 adj[m][n]=true;
 }
 
-
+#pragma omp parallel for
 for(int i=0;i<nodes;i++)
 {
 	for(int j=0;j<nodes;j++)
@@ -200,7 +222,6 @@ for(int i=0;i<nodes;i++)
 		}
 	}
 }
-
 initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
 cout.precision(30);
 auto start = high_resolution_clock::now();
