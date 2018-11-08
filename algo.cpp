@@ -40,7 +40,7 @@ int j,count=0;
 vector<double> unidimensionalA;
 vector<double> unidimensionalB;
 
-void convert(vector<vector<double>> a,vector<vector<double>> b,int size)
+void convert(vector<vector<double>> &a,vector<vector<double>> &b,int size)
 {
 	unidimensionalA.clear();
 	unidimensionalB.clear();
@@ -55,7 +55,7 @@ for(int i=0;i<size;i++)
 }
 
 }
-void mul(vector<vector<double>> a,vector<vector<double>> b)
+void mul(vector<vector<double>> &a,vector<vector<double>> &b)
 {
 
  vector<vector<double>> mul(powerranks.size(),vector<double>(powerranks.size(),0)); 
@@ -88,6 +88,19 @@ int i,j,k,iOff, jOff;
 }
 }
 
+void power1(vector<vector<double>> &p)
+{
+//if(n==1)
+	//return;
+//else
+//{
+	//power(p,n/2);
+	
+	//if(n%2)
+		//mul(p,initialMatrix);
+///}
+
+}
 void power(vector<vector<double>> &p,int n)
 {
 if(n==1)
@@ -130,7 +143,8 @@ void calculateRankPower()
 	for(int i=1;i<100;i++)
         {
         	
-        	power(powerMatrix,i);
+        	//power1(powerMatrix);
+        	mul(powerMatrix,initialMatrix);
         	
 		mulwithrank(powerMatrix,rankinit);
 		if(checksamepower())
@@ -149,7 +163,7 @@ int main()
 	int nodes;
 	
 
-	freopen("testp.txt","w",stdout);
+	freopen("testp1.txt","w",stdout);
 	cout<<200<<endl;
 	cout<<4000<<endl;
 	int e=4000,k=0;
@@ -168,8 +182,8 @@ int main()
 		cout<<endl;
 	}
 	
-	freopen("testp.txt","r",stdin);
-	freopen("outputp.txt","w",stdout);
+	freopen("testp1.txt","r",stdin);
+	freopen("outputp1.txt","w",stdout);
 cout<<"Enter Nodes: "<<endl;
  cin>>nodes;
   for(int i=0;i<nodes;i++)
