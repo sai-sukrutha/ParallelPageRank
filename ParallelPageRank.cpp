@@ -24,15 +24,16 @@ vector<vector<int>> edge;
 bool checksamepower()
 {
 int j,count=0;
+int size=powerranks.size();
 	
-		for(j=0;j<powerranks.size();j++)
+		for(j=0;j<size;j++)
 		{
 
 			if(abs(powerPrevranks[j]-powerranks[j])<0.0001)
 				count++;
 		}
 	
-	if(count==powerranks.size())
+	if(count==size)
 		return true;
 	else
 		return false;
@@ -40,7 +41,7 @@ int j,count=0;
 vector<double> unidimensionalA;
 vector<double> unidimensionalB;
 
-void convert(vector<vector<double>> a,vector<vector<double>> b,int size)
+void convert(vector<vector<double>> &a,vector<vector<double>> &b,int size)
 {
 	unidimensionalA.clear();
 	unidimensionalB.clear();
@@ -55,7 +56,7 @@ for(int i=0;i<size;i++)
 }
 
 }
-void mul(vector<vector<double>> a,vector<vector<double>> b)
+void mul(vector<vector<double>> &a,vector<vector<double>> &b)
 {
 
  vector<vector<double>> mul(powerranks.size(),vector<double>(powerranks.size(),0)); 
@@ -88,35 +89,24 @@ int i,j,k,iOff, jOff;
 }
 }
 
-void power(vector<vector<double>> &p,int n)
-{
-if(n==1)
-	return;
-else
-{
-	power(p,n/2);
-	mul(p,p);
-	if(n%2)
-		mul(p,initialMatrix);
-}
 
-}
 
-void mulwithrank(vector<vector<double>> adj,vector<double> v)
+void mulwithrank(vector<vector<double>> &adj,vector<double> &v)
 {
-vector<double>mul(powerranks.size(),0); 
+	int size=powerranks.size();
+vector<double>mul(size,0); 
 #pragma omp parallel for
-    for (int i = 0; i< powerranks.size(); i++) 
+    for (int i = 0; i< size; i++) 
     { 
         for (int j = 0; j < 1; j++) 
         { 
             mul[i]= 0; 
-            for (int k = 0; k < powerranks.size(); k++) 
+            for (int k = 0; k < size; k++) 
                 mul[i] += adj[i][k]*v[k]; 
         } 
     } 
   
-   for(int i=0;i<powerranks.size();i++)
+   for(int i=0;i<size;i++)
    	powerranks[i]=mul[i];
  
 
@@ -130,7 +120,8 @@ void calculateRankPower()
 	for(int i=1;i<100;i++)
         {
         	
-        	power(powerMatrix,i);
+        	
+        	mul(powerMatrix,initialMatrix);
         	
 		mulwithrank(powerMatrix,rankinit);
 		if(checksamepower())
@@ -153,7 +144,7 @@ int main()
 	cout<<200<<endl;
 	cout<<4000<<endl;
 	int e=4000,k=0;
-	edge.clear();
+	
 	auto start = high_resolution_clock::now();
 	edge.resize(4000);
 	while(k< e)
@@ -218,6 +209,9 @@ for(int i=0;i<nodes;i++)
 		}
 	}
 }
+adj.clear();
+outdegree.clear();
+edge.clear();
 initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
 cout.precision(30);
 

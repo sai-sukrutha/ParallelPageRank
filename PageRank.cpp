@@ -41,7 +41,7 @@ int size=powerranks.size();
 		return false;
 }
 
-void mul(vector<vector<double>> a,vector<vector<double>> b)
+void mul(vector<vector<double>> &a,vector<vector<double>> &b)
 {
 int size=powerranks.size();
  vector<vector<double>> mul(size,vector<double>(size,0)); 
@@ -63,21 +63,9 @@ int size=powerranks.size();
 
 }
 
-void power(vector<vector<double>> &p,int n)
-{
-if(n==1)
-	return;
-else
-{
-	power(p,n/2);
-	mul(p,p);
-	if(n%2)
-		mul(p,initialMatrix);
-}
 
-}
 
-void mulwithrank(vector<vector<double>> adj,vector<double> v)
+void mulwithrank(vector<vector<double>> &adj,vector<double> &v)
 {
 	int size=powerranks.size();
 vector<double>mul(size,0); 
@@ -105,7 +93,7 @@ void calculateRankPower()
 	for(int i=1;i<100;i++)
         {
         	
-        	power(powerMatrix,i);
+        	mul(powerMatrix,initialMatrix);
         	
 		mulwithrank(powerMatrix,rankinit);
 		if(checksamepower())
@@ -123,28 +111,20 @@ int main()
 {
 	int nodes;
 	
-
-	 //srand(time(0)); 
-  
-	//std::ofstream of;
-    //of.open( "test.txt" );
      freopen("test.txt","w",stdout);
-    //teedev td( of, std::cout );
-    //tee_stream ts(td);
-	cout<<1000<<endl;
-	cout<<40000<<endl;
-	long e=40000,k=0;
+  
+	cout<<200<<endl;
+	cout<<4000<<endl;
+	long e=4000,k=0;
 	
-	//vector<vector<int>> edge;
-	//long edge[e][2];
-         edge.clear();
+        
 	auto start = high_resolution_clock::now();
-	edge.resize(40000);
+	edge.resize(4000);
 	while(k < e)
 	{
 		  
-		edge[k].push_back(rand()%1000);
-		edge[k].push_back(rand()%1000);
+		edge[k].push_back(rand()%200);
+		edge[k].push_back(rand()%200);
 		
 		k++;
 	}
@@ -152,12 +132,11 @@ int main()
 	for(int i=0;i<e;i++)
 	{
 		cout<<edge[i][0]<<" "<<edge[i][1];
-		//c++;
+		
 		cout<<endl;
 	}
 	
-	//of.close();
-	edge.clear();
+	
 	freopen("test.txt","r",stdin);
 	freopen("output.txt","w",stdout);
 cout<<"Enter Nodes: "<<endl;
@@ -218,6 +197,9 @@ for(int i=0;i<nodes;i++)
 	}
 }
 
+	edge.clear();
+	adj.clear();
+	outdegree.clear();
 initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
 cout.precision(30);
 
