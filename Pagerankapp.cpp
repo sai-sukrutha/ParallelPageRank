@@ -77,12 +77,7 @@ if(checksame()||count==15)
 else
 	copy(ranks.begin(), ranks.end(), Prevranks.begin());
         
-/*for(int i=0;i<ranks.size();i++)
-{
-cout<<"  "<<ranks[i];
 
-}
-cout<<"\n";*/
 }
 
 }
@@ -106,19 +101,7 @@ void mul(vector<vector<double>> a,vector<vector<double>> b)
             powerMatrix[i][j] = mul[i][j];
 
 }
-void power(vector<vector<double>> &p,int n)
-{
-if(n==1)
-	return;
-else
-{
-	power(p,n/2);
-	mul(p,p);
-	if(n%2)
-		mul(p,initialMatrix);
-}
 
-}
 void mulwithrank(vector<vector<double>> adj,vector<double> v)
 {
 vector<double>mul(powerranks.size(),0); 
@@ -144,7 +127,7 @@ void calculateRankPower()
 	for(int i=1;i<100;i++)
         {
         	
-        	power(powerMatrix,i);
+        	mul(powerMatrix,initialMatrix);
         	
 		mulwithrank(powerMatrix,rankinit);
 		if(checksamepower())
@@ -152,13 +135,7 @@ void calculateRankPower()
 		else
 			copy(powerranks.begin(), powerranks.end(), powerPrevranks.begin());
 		
-/*for(int i=0;i<prevranks.size();i++)
-{
-cout<<"  "<<prevranks[i];
 
-}
-cout<<"\n";*/
-		
 			}
 	
 }
