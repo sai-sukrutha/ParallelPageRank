@@ -64,7 +64,7 @@ int i,j,k,iOff, jOff;
 	double tot;
 	long size=powerranks.size();
 	convert(a,b,size);
-	#pragma omp parallel shared(mul) private(i, j, k, iOff, jOff, tot) num_threads(40)
+	#pragma omp parallel shared(mul) private(i, j, k, iOff, jOff, tot) num_threads(5)
 	{
 
  #pragma omp for schedule(static)
