@@ -4,6 +4,7 @@
 #include<algorithm>
 #include <sstream>
 #include <string>
+#include <omp.h>
 using namespace std;
 
 vector<double> ranks;
@@ -81,41 +82,76 @@ else
 }
 
 }
-void mul(vector<vector<double>> a,vector<vector<double>> b)
+
+
+vector<double> unidimensionalA;
+vector<double> unidimensionalB;
+
+void convert(vector<vector<double>> &a,vector<vector<double>> &b,int size)
+{
+	unidimensionalA.clear();
+	unidimensionalB.clear();
+
+for(int i=0;i<size;i++)
+{
+	for(int j=0;j<size;j++)
+	{
+		unidimensionalA.push_back(a[i][j]);
+		unidimensionalB.push_back(b[j][i]);
+	}
+}
+
+}
+
+void mul(vector<vector<double>> &a,vector<vector<double>> &b)
 {
 
  vector<vector<double>> mul(powerranks.size(),vector<double>(powerranks.size(),0)); 
-    for (int i = 0; i < powerranks.size(); i++) 
+int i,j,k,iOff, jOff;
+	double tot;
+	long size=powerranks.size();
+	convert(a,b,size);
+	#pragma omp parallel shared(mul) private(i, j, k, iOff, jOff, tot) num_threads(40)
+	{
+
+ #pragma omp for schedule(static)
+    for ( i = 0; i < size; i++) 
     { 
-        for (int j = 0; j < powerranks.size(); j++) 
+    	iOff = i * size;
+        for ( j = 0; j < size; j++) 
         { 
-            mul[i][j] = 0; 
-            for (int k = 0; k < powerranks.size(); k++) 
-                mul[i][j] += a[i][k]*b[k][j]; 
+        	jOff = j * size;
+            tot = 0; 
+            for ( k = 0; k < size; k++) 
+            	tot += unidimensionalA[iOff + k] * unidimensionalB[jOff + k];
+
+                mul[i][j] =tot;
         } 
     } 
   
    
-    for (int i=0; i<powerranks.size(); i++) 
-        for (int j=0; j<powerranks.size(); j++) 
+    for ( i=0; i<size; i++) 
+        for ( j=0; j<size; j++) 
             powerMatrix[i][j] = mul[i][j];
-
+}
 }
 
-void mulwithrank(vector<vector<double>> adj,vector<double> v)
+void mulwithrank(vector<vector<double>> &adj,vector<double> &v)
 {
-vector<double>mul(powerranks.size(),0); 
-    for (int i = 0; i< powerranks.size(); i++) 
+	int size=powerranks.size();
+vector<double>mul(size,0);
+#pragma omp parallel for 
+    for (int i = 0; i< size; i++) 
     { 
         for (int j = 0; j < 1; j++) 
         { 
             mul[i]= 0; 
-            for (int k = 0; k < powerranks.size(); k++) 
+            for (int k = 0; k < size; k++) 
                 mul[i] += adj[i][k]*v[k]; 
         } 
     } 
   
-   for(int i=0;i<powerranks.size();i++)
+   for(int i=0;i<size;i++)
    	powerranks[i]=mul[i];
 
 
@@ -237,6 +273,7 @@ for(i=0;i<r.size()-1;i++)
 
 
 }
+#pragma omp parallel for
 for(int i=0;i<nplayers;i++)
 {
 	for(int j=0;j<nplayers;j++)
@@ -257,8 +294,11 @@ initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
 
 
 
+
 cout.precision(5);
 calculateRank();
+//adj.clear();
+//outdegree.clear();
 
 cout<<"Vanilla Page Ranks "<<endl;
 for(int i=0;i<nplayers;i++)
