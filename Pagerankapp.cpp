@@ -19,8 +19,7 @@ vector<vector<double>> initialMatrix;
 vector<double>rankinit;
 
 //Sorting for Printing
-vector <pair<int,double>> rank_vect;
-vector <pair<int,double>> powerrank_vect;
+
 
 bool checksame()
 {
@@ -282,9 +281,10 @@ int main()
 
 		cout.precision(5);
 		calculateRank();
-		//adj.clear();
-		//outdegree.clear();
-
+		adj.clear();
+		outdegree.clear();
+vector <pair<int,double>> rank_vect;
+vector <pair<int,double>> powerrank_vect;
 		//Sorting the ranks for printing
 		for(int i=0;i<nplayers;i++)
             rank_vect.push_back(make_pair(i,ranks[i]));

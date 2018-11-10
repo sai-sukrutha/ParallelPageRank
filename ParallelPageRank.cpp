@@ -133,7 +133,10 @@ void calculateRankPower()
 			}
 	
 }
-
+bool sortbyrank(const pair<int,double> &a, const pair<int,double> &b) 
+{ 
+    return (a.second > b.second); 
+} 
 int main()
 
 {
@@ -216,15 +219,25 @@ initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
 cout.precision(30);
 
 calculateRankPower();
+vector <pair<int,double>> powerrank_vect;
 cout<<"Power matrix Page Ranks  "<<endl;
-for(int j=0;j<powerranks.size();j++)
+for(int j=0;j<nodes;j++)
                  {
-                         cout<<" "<<powerranks[j];
+                       powerrank_vect.push_back(make_pair(j,powerranks[j]));
 
 			}
+			  sort(powerrank_vect.begin(),powerrank_vect.end(),sortbyrank);
+			   cout<<"Rank\t Id\tScore                  "<<endl;
+		for(int i=0;i<nodes;i++)
+		{
+			cout<<i+1<<"        "<<powerrank_vect[i].first<<"   "<<powerrank_vect[i].second<<endl;
+		}
+		
+		
+		powerrank_vect.clear();
 		
 cout<<endl;
-cout<<"Max-Rank Power matrix  "<<*max_element(powerranks.begin(),powerranks.end())<<endl;
+
 auto stop = high_resolution_clock::now(); 
   auto duration = duration_cast<microseconds>(stop - start); 
  cout << "Time taken by function: "
