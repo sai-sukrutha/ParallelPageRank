@@ -11,28 +11,28 @@ vector<double> ranks;
 vector<double> Prevranks;
 vector<double> powerranks;
 vector<double> powerPrevranks;
-vector<int> outdegree;
+vector<long long> outdegree;
 vector<vector<bool>> adj;
 
 vector<vector<double>>powerMatrix;
-vector<vector<double>> initialMatrix;
-vector<double>rankinit;
+long long nodes;
+
 
 //Sorting for Printing
 
 
 bool checksame()
 {
-    int j,count=0;
+    long long j,count=0;
 
-	for(j=0;j<ranks.size();j++)
+	for(j=0;j<nodes;j++)
 	{
 
 		if(abs(Prevranks[j]-ranks[j])<0.0001)
 			count++;
 	}
 	
-	if(count==ranks.size())
+	if(count==nodes)
 		return true;
 	else
 		return false;
@@ -40,16 +40,16 @@ bool checksame()
 
 bool checksamepower()
 {
-    int j,count=0;
-	
-	for(j=0;j<powerranks.size();j++)
+    long long count=0;
+	#pragma omp parallel for shared(count) num_threads(10)
+	for(long long j=0;j<nodes;j++)
 	{
 
 		if(abs(powerPrevranks[j]-powerranks[j])<0.0001)
 			count++;
 	}
 
-	if(count==powerranks.size())
+	if(count==nodes)
 		return true;
 	else
 		return false;
@@ -57,14 +57,14 @@ bool checksamepower()
 
 void calculateRank()
 {
-	int count=1;
+	long long count=1;
 	while(1)
 	{
 		count++;
 
-		for(int i=0;i<ranks.size();i++)
+		for(long long i=0;i<ranks.size();i++)
 		{ 
-			for(int j=0;j<ranks.size();j++)
+			for(long long j=0;j<ranks.size();j++)
 			{
 				if(adj[i][j])
 				{       
@@ -81,84 +81,48 @@ void calculateRank()
 }
 
 
-vector<double> unidimensionalA;
-vector<double> unidimensionalB;
-
-void convert(vector<vector<double>> &a,vector<vector<double>> &b,int size)
-{
-	unidimensionalA.clear();
-	unidimensionalB.clear();
-
-	for(int i=0;i<size;i++)
-	{
-		for(int j=0;j<size;j++)
-		{
-			unidimensionalA.push_back(a[i][j]);
-			unidimensionalB.push_back(b[j][i]);
-		}
-	}
-}
 
 
-void mul(vector<vector<double>> &a,vector<vector<double>> &b)
-{
-    vector<vector<double>> mul(powerranks.size(),vector<double>(powerranks.size(),0)); 
-    int i,j,k,iOff, jOff;
-	double tot;
-	long size=powerranks.size();
-	convert(a,b,size);
-	#pragma omp parallel shared(mul) private(i, j, k, iOff, jOff, tot) num_threads(5)
-	{
-		#pragma omp for schedule(static)
-		for ( i = 0; i < size; i++) 
-		{ 
-			iOff = i * size;
-		    for ( j = 0; j < size; j++) 
-		    { 
-		    	jOff = j * size;
-		        tot = 0; 
-		        for ( k = 0; k < size; k++) 
-		        	tot += unidimensionalA[iOff + k] * unidimensionalB[jOff + k];
-		            mul[i][j] =tot;
-		    } 
-	    } 
-  
-	    for ( i=0; i<size; i++) 
-	        for ( j=0; j<size; j++) 
-	            powerMatrix[i][j] = mul[i][j];
-    }
-}
+
+
 
 
 void mulwithrank(vector<vector<double>> &adj,vector<double> &v)
 {
-	int size=powerranks.size();
-	vector<double>mul(size,0);
-	#pragma omp parallel for 
-    for (int i = 0; i< size; i++) 
+	
+vector<double>mul(nodes,0);
+long long i,j,k; 
+#pragma omp parallel for shared(mul) private(i, j, k) num_threads(5)
+for ( i = 0; i< nodes; i++) 
     { 
-        for (int j = 0; j < 1; j++) 
+        for ( j = 0; j < 1; j++) 
         { 
-            mul[i]= 0; 
-            for (int k = 0; k < size; k++) 
-                mul[i] += adj[i][k]*v[k]; 
+            mul[i]=0;
+            for ( k = 0; k < nodes; k++) 
+            	mul[i] += adj[i][k] * v[k];
+
+             
+            
+                 
         } 
     } 
-  
-    for(int i=0;i<size;i++)
-   	   powerranks[i]=mul[i];
+  copy(mul.begin(), mul.end(), powerranks.begin());
+ 
+ 
+
+
 }
 
 
 void calculateRankPower()
 {
-	rankinit.assign(powerranks.begin(),powerranks.end());
 	
-	for(int i=1;i<100;i++)
+	
+	for(long long i=1;i<100;i++)
     {    	
-        mul(powerMatrix,initialMatrix);
+       
         	
-		mulwithrank(powerMatrix,rankinit);
+		mulwithrank(powerMatrix,powerPrevranks);
 		if(checksamepower())
 			break;
 		else
@@ -178,34 +142,36 @@ int main()
 	cout<<"Press 1 for Team Sport, 2 for Individual sport  ";
     cin>>game;
     cout.precision(5);
-    int count=0,temp;
-    int nplayers;
+    long long count=0,temp;
+    
     if(game==1)
 	    cout<<"Enter Number of Teams : ";
     else
 	 	cout<<"Enter Number of participants : ";
-	cin>>nplayers;
-	for(int i=0;i<nplayers;i++)
+	cin>>nodes;
+	if(game==1)
+		cout<<"Team Ids are from 0 to "<<nodes-1<<endl;
+	else
+		cout<<"player Ids are from 0 to "<<nodes-1<<endl;
+	for(int i=0;i<nodes;i++)
 	{
-		ranks.push_back(1.0/nplayers);
-		powerranks.push_back(1.0/nplayers);
+		ranks.push_back(1.0/nodes);
+		powerranks.push_back(1.0/nodes);
 	}
-	Prevranks.resize(nplayers);
-	powerPrevranks.resize(nplayers);
+	Prevranks.resize(nodes);
+	powerPrevranks.resize(nodes);
 	copy(ranks.begin(), ranks.end(), Prevranks.begin());
 	copy(powerranks.begin(), powerranks.end(), powerPrevranks.begin());
 
-	int m,n,matches;
-	outdegree.resize(nplayers);
-	adj.resize(nplayers);
-	for (int i = 0; i < nplayers; ++i)
-	    adj[i].resize(nplayers);
-	powerMatrix.resize(nplayers);
-	for (int i = 0; i < nplayers; ++i)
-	    powerMatrix[i].resize(nplayers);
-	initialMatrix.resize(nplayers);
-	for (int i = 0; i < nplayers; ++i)
-	    initialMatrix[i].resize(nplayers);
+	long long m,n,matches;
+	outdegree.resize(nodes);
+	adj.resize(nodes);
+	for (int i = 0; i < nodes; ++i)
+	    adj[i].resize(nodes);
+	powerMatrix.resize(nodes);
+	for (int i = 0; i < nodes; ++i)
+	    powerMatrix[i].resize(nodes);
+	
 	if(game==1)
 		cout<<"Enter Number of Tournaments : ";
 	else
@@ -221,7 +187,7 @@ int main()
 		  	{
 		        cout<<"Enter winner and loser ";
 		  		cin>>m>>n;
-		  		if(m>nplayers-1||n>nplayers-1)
+		  		if(m>nodes-1||n>nodes-1)
 		  		{
 		  			cout<<"Enter valid Team Id"<<endl;
 		  			matches++;
@@ -239,7 +205,7 @@ int main()
 			while( cin>>x )
 			{
 				int f=0;
-				if(x>nplayers-1)
+				if(x>nodes-1)
 				{
 					cout<<"Enter valid player Id"<<endl;
 					f=1;
@@ -250,7 +216,7 @@ int main()
 					break;
 			}
 
-			int i=0,j=0;
+			long long i=0,j=0;
 			for(i=0;i<r.size()-1;i++)
 			{
 				for(j=i+1;j<r.size();j++)
@@ -262,31 +228,31 @@ int main()
 	    }
 
 		#pragma omp parallel for
-		for(int i=0;i<nplayers;i++)
+		for(long long i=0;i<nodes;i++)
 		{
-			for(int j=0;j<nplayers;j++)
+			for(long long j=0;j<nodes;j++)
 			{
 				if(adj[i][j])
 				{
 					//double x=(1.0/outdegree[j]);
-					powerMatrix[i][j]=0.85*(1.0/outdegree[j])+0.15/nplayers;
+					powerMatrix[i][j]=0.85*(1.0/outdegree[j])+0.15/nodes;
 				}
 				if(outdegree[j]==0)
 				{
-					powerMatrix[i][j]=1.0/nplayers;
+					powerMatrix[i][j]=1.0/nodes;
 				}
 			}
 		}
-		initialMatrix.assign(powerMatrix.begin(),powerMatrix.end());
+		
 
 		cout.precision(5);
 		calculateRank();
 		adj.clear();
 		outdegree.clear();
-vector <pair<int,double>> rank_vect;
-vector <pair<int,double>> powerrank_vect;
+vector <pair<long long,double>> rank_vect;
+vector <pair<long long,double>> powerrank_vect;
 		//Sorting the ranks for printing
-		for(int i=0;i<nplayers;i++)
+		for(long long i=0;i<nodes;i++)
             rank_vect.push_back(make_pair(i,ranks[i]));
         sort(rank_vect.begin(),rank_vect.end(),sortbyrank);
         
@@ -294,7 +260,7 @@ vector <pair<int,double>> powerrank_vect;
 		cout<<"--------------------------------"<<endl;
 		cout<<"Rank\t Id\tScore                  "<<endl;
 		cout<<"--------------------------------"<<endl;
-		for(int i=0;i<rank_vect.size();i++)
+		for(long long i=0;i<nodes;i++)
 		{
 			cout<<i+1<<"        "<<rank_vect[i].first<<"   "<<rank_vect[i].second<<endl;
 		}
@@ -307,7 +273,7 @@ vector <pair<int,double>> powerrank_vect;
 		calculateRankPower();
 
 		//Sorting the ranks for printing
-		for(int i=0;i<nplayers;i++)
+		for(int i=0;i<nodes;i++)
             powerrank_vect.push_back(make_pair(i,powerranks[i]));
         sort(powerrank_vect.begin(),powerrank_vect.end(),sortbyrank);
 
@@ -316,7 +282,7 @@ vector <pair<int,double>> powerrank_vect;
 		cout<<"Rank\t Id\tScore                  "<<endl;
 		cout<<"--------------------------------"<<endl;
 		
-		for(int i=0;i<powerrank_vect.size();i++)
+		for(int i=0;i<nodes;i++)
 		{
 			cout<<i+1<<"        "<<powerrank_vect[i].first<<"   "<<powerrank_vect[i].second<<endl;
 		}		
