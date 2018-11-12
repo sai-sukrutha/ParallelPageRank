@@ -61,6 +61,8 @@ void calculateRank()
 	while(1)
 	{
 		count++;
+		if(count != 2)
+			fill(ranks.begin(),ranks.end(),0);
 
 		for(long long i=0;i<ranks.size();i++)
 		{ 
@@ -68,13 +70,15 @@ void calculateRank()
 			{
 				if(adj[i][j])
 				{       
-					ranks[i]+=0.85*ranks[j]/outdegree[j];
+					ranks[i]+=0.85*Prevranks[j]/outdegree[j];
 				}	
 		    }
 		    ranks[i]+=0.15/ranks.size();
 		}
-		if(checksame()||count==15)
+		if(checksame()||count==15){
+			copy(ranks.begin(), ranks.end(), Prevranks.begin());
 			break;
+		}
 		else
 			copy(ranks.begin(), ranks.end(), Prevranks.begin());
 	}
@@ -118,13 +122,16 @@ void calculateRankPower()
 {
 	
 	
-	for(long long i=1;i<100;i++)
+	for(long long i=1;i<=15;i++)
     {    	
        
         	
 		mulwithrank(powerMatrix,powerPrevranks);
 		if(checksamepower())
+		{
+			copy(powerranks.begin(), powerranks.end(), powerPrevranks.begin());	
 			break;
+		}
 		else
 			copy(powerranks.begin(), powerranks.end(), powerPrevranks.begin());	
 	}
@@ -141,7 +148,7 @@ int main()
 	int game;
 	cout<<"Press 1 for Team Sport, 2 for Individual sport  ";
     cin>>game;
-    cout.precision(5);
+    cout.precision(30);
     long long count=0,temp;
     
     if(game==1)
@@ -165,6 +172,7 @@ int main()
 
 	long long m,n,matches;
 	outdegree.resize(nodes);
+
 	adj.resize(nodes);
 	for (int i = 0; i < nodes; ++i)
 	    adj[i].resize(nodes);
@@ -225,7 +233,9 @@ int main()
 					outdegree[r[j]]++;
 				}
 			}
+
 	    }
+
 
 		#pragma omp parallel for
 		for(long long i=0;i<nodes;i++)
@@ -242,13 +252,12 @@ int main()
 					powerMatrix[i][j]=1.0/nodes;
 				}
 			}
-		}
-		
+		}	
 
-		cout.precision(5);
+		cout.precision(30);
 		calculateRank();
-		adj.clear();
-		outdegree.clear();
+		//adj.clear();
+		//outdegree.clear();
 vector <pair<long long,double>> rank_vect;
 vector <pair<long long,double>> powerrank_vect;
 		//Sorting the ranks for printing
@@ -256,6 +265,7 @@ vector <pair<long long,double>> powerrank_vect;
             rank_vect.push_back(make_pair(i,ranks[i]));
         sort(rank_vect.begin(),rank_vect.end(),sortbyrank);
         
+        /*
 		cout<<"Vanilla Page Ranks "<<endl;
 		cout<<"--------------------------------"<<endl;
 		cout<<"Rank\t Id\tScore                  "<<endl;
@@ -264,7 +274,7 @@ vector <pair<long long,double>> powerrank_vect;
 		{
 			cout<<i+1<<"        "<<rank_vect[i].first<<"   "<<rank_vect[i].second<<endl;
 		}
-		cout<<"\n";
+		cout<<"\n";*/
 		rank_vect.clear();
 		//cout<<"Max-Rank Vanilla  "<<*max_element(ranks.begin(),ranks.end())<<endl;
         
